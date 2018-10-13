@@ -3,6 +3,9 @@ package ru.starokozhev.dao;
 import org.apache.log4j.Logger;
 import ru.starokozhev.model.User;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +24,16 @@ public class UserDaoJdbcImpl implements UserDao{
 
     //экземпляр класса Logger, производит логирование в файл
     private static final Logger log = Logger.getLogger(UserDaoJdbcImpl.class);
+    private Connection connection;
+
+    public UserDaoJdbcImpl(DataSource dataSource){
+        try {
+            connection = dataSource.getConnection();
+        }catch (SQLException ex){
+            log.error("Error getting connection");
+            ex.printStackTrace();
+        }
+    }
 
     /**
      * Метод получения из базы данных всех пользователей с указанным именем
