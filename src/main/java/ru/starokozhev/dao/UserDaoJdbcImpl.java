@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 import ru.starokozhev.model.User;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,9 +97,34 @@ public class UserDaoJdbcImpl implements UserDao{
      * @return список пользователей
      */
     @Override
-    public List findAll() {
+    public List<User> findAll() {
         log.info("Find all users!");
-        //TODO Реализовать функицонал метода
-        return null;
+        List<User> users = new ArrayList<>();
+        Statement statement = null;
+        try {
+            statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(SQL_SELECT_ALL_USERS_WITH_CITY);
+            while (resultSet.next()){
+                Integer id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                String email = resultSet.getString("email");
+                String password = resultSet.getString("password");
+                String cityName = resultSet.getString("city_name");
+                users.add(new User(id, name, email, password, cityName));
+            }
+        }catch (SQLException ex){
+            log.error("Error read from database");
+            ex.printStackTrace();
+        }finally {
+            if (statement != null){
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    log.error("Error closed statement");
+                    e.printStackTrace();
+                }
+            }
+        }
+        return users;
     }
 }
