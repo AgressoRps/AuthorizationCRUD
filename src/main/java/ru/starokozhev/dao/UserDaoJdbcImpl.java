@@ -12,31 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class UserDaoJdbcImpl implements IUserDao {
-    //SQL language
-    private static final String SQL_SELECT_ALL_USERS_WITH_CITY = "SELECT user_info.*, city.city_name " +
-            "FROM user_info LEFT JOIN city ON user_info.city_id = city.id";
-
-    //SQL language
-    private static final String SQL_SELECT_USER_BY_NAME = "SELECT user_info.*, city.city_name " +
-            "FROM user_info LEFT JOIN city ON user_info.city_id = city.id " +
-            "WHERE LOWER (user_info.name) LIKE ?";
-
-    //SQL language
-    private static final String SQL_SELECT_USER_BY_ID = "SELECT user_info.*, city.city_name " +
-            "FROM user_info LEFT JOIN city ON user_info.city_id = city.id " +
-            "WHERE user_info.id = ?";
-
-    //SQL language
-    private static final String SQL_INSERT_USER = "INSERT INTO user_info(name, email, password, city_id) " +
-            "VALUES(?, ?, ?, ?)";
-
-    //SQL language
-    private static final String SQL_UPDATE_USER = "UPDATE user_info SET name = ?, " +
-            "email = ?, password = ?, city_id = ? WHERE id = ?";
-
-    //SQL language
-    private static final String SQL_DELETE_USER = "DELETE FROM user_info WHERE id = ?";
-
     //экземпляр класса Logger, производит логирование в файл
     private static final Logger log = Logger.getLogger(UserDaoJdbcImpl.class);
     private Connection connection = null;
