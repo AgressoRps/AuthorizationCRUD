@@ -1,19 +1,33 @@
 package ru.starokozhev.model;
 
-public class User {
-    private Integer id;
-    private String name;
-    private String email;
-    private String password;
-    private String city;
+import javax.persistence.*;
 
-    public User(Integer id, String name, String email, String password, String city) {
+@Entity
+@Table(name = "user_info")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    @Column (name = "name")
+    private String name;
+    @Column (name = "email")
+    private String email;
+    @Column (name = "password")
+    private String password;
+    @ManyToOne
+    @JoinColumn(name = "city_id")
+    private City city;
+
+    public User(){}
+
+    public User(Integer id, String name, String email, String password, City city) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
         this.city = city;
     }
+    //public User(String name, String email, String password)
 
     public Integer getId() {
         return id;
@@ -47,11 +61,11 @@ public class User {
         this.password = password;
     }
 
-    public String getCity() {
+    public City getCity() {
         return city;
     }
 
-    public void setCity(String city) {
+    public void setCity(City city) {
         this.city = city;
     }
 }

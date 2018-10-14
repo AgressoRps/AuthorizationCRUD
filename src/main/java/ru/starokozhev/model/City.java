@@ -1,8 +1,17 @@
 package ru.starokozhev.model;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "city")
 public class City {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column (name = "city_name")
     private String cityName;
+
+    public City(){}
 
     public City(Integer id, String cityName){
         this.id = id;

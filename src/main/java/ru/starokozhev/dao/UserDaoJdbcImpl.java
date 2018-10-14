@@ -1,37 +1,52 @@
 package ru.starokozhev.dao;
 
 import org.apache.log4j.Logger;
+import ru.starokozhev.model.City;
 import ru.starokozhev.model.User;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-public class UserDaoJdbcImpl implements UserDao{
+public class UserDaoJdbcImpl implements IUserDao {
     //SQL language
-    private static final String SQL_SELECT_ALL_USERS_WITH_CITY = "SELECT user_info.id, user_info.name, " +
-            "user_info.email, user_info.password, city.city_name " +
-            "FROM user_info " +
-            "LEFT JOIN city ON user_info.city_id = city.id";
+    private static final String SQL_SELECT_ALL_USERS_WITH_CITY = "SELECT user_info.*, city.city_name " +
+            "FROM user_info LEFT JOIN city ON user_info.city_id = city.id";
 
     //SQL language
-    private static final String SQL_SELECT_USER_BY_NAME_WITH_CITY = "SELECT user_info.id, user_info.name, " +
-            "user_info.email, user_info.password, city.city_name " +
+    private static final String SQL_SELECT_USER_BY_NAME = "SELECT user_info.*, city.city_name " +
             "FROM user_info LEFT JOIN city ON user_info.city_id = city.id " +
-            "WHERE LOWER(user_info.name) LIKE '?'";
+            "WHERE LOWER (user_info.name) LIKE ?";
+
+    //SQL language
+    private static final String SQL_SELECT_USER_BY_ID = "SELECT user_info.*, city.city_name " +
+            "FROM user_info LEFT JOIN city ON user_info.city_id = city.id " +
+            "WHERE user_info.id = ?";
+
+    //SQL language
+    private static final String SQL_INSERT_USER = "INSERT INTO user_info(name, email, password, city_id) " +
+            "VALUES(?, ?, ?, ?)";
+
+    //SQL language
+    private static final String SQL_UPDATE_USER = "UPDATE user_info SET name = ?, " +
+            "email = ?, password = ?, city_id = ? WHERE id = ?";
+
+    //SQL language
+    private static final String SQL_DELETE_USER = "DELETE FROM user_info WHERE id = ?";
 
     //экземпляр класса Logger, производит логирование в файл
     private static final Logger log = Logger.getLogger(UserDaoJdbcImpl.class);
-    private Connection connection;
+    private Connection connection = null;
 
     public UserDaoJdbcImpl(DataSource dataSource){
         try {
-            connection = dataSource.getConnection();
-        }catch (SQLException ex){
-            log.error("Error getting connection");
-            ex.printStackTrace();
+            this.connection = dataSource.getConnection();
+        } catch (SQLException e) {
+            log.error("Error connecting with Database");
+            e.printStackTrace();
         }
     }
 
@@ -43,8 +58,20 @@ public class UserDaoJdbcImpl implements UserDao{
     @Override
     public List<User> findAllByName(String nameUser) {
         log.info("Find users by name!");
-        //TODO Реализовать функицонал метода
-        return null;
+        List<User> users = new ArrayList<>();
+        ResultSet resultSet = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_USER_BY_NAME)) {
+            preparedStatement.setString(1, nameUser + "%");
+            resultSet = preparedStatement.executeQuery();
+            parseResultSet(users, resultSet);
+        }catch (SQLException ex){
+            log.error("Error read from database");
+            ex.printStackTrace();
+        }finally {
+            closeResultSet(resultSet);
+            close();
+        }
+        return users;
     }
 
     /**
@@ -56,8 +83,23 @@ public class UserDaoJdbcImpl implements UserDao{
     @Override
     public Optional<User> find(Integer id) {
         log.info("Find user by id!");
-        //TODO Реализовать функицонал метода
-        return Optional.empty();
+        ArrayList<User> users = new ArrayList<>();
+        ResultSet resultSet = null;
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_USER_BY_ID)){
+            preparedStatement.setInt(1, id);
+            resultSet = preparedStatement.executeQuery();
+            parseResultSet(users, resultSet);
+        }catch (SQLException ex){
+            log.error("Error read from database");
+            ex.printStackTrace();
+        }finally {
+            closeResultSet(resultSet);
+            close();
+        }
+        if (users.isEmpty()){
+            return Optional.empty();
+        }
+        return Optional.of(users.get(0));
     }
 
     /**
@@ -68,7 +110,18 @@ public class UserDaoJdbcImpl implements UserDao{
     @Override
     public void save(User model) {
         log.info("Save user model!");
-        //TODO Реализовать функицонал метода
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_INSERT_USER)){
+            preparedStatement.setString(1, model.getName());
+            preparedStatement.setString(2, model.getEmail());
+            preparedStatement.setString(3, model.getPassword());
+            preparedStatement.setInt(4, model.getCity().getId());
+            preparedStatement.executeUpdate();
+        }catch (SQLException ex){
+            log.error("Error insert user to Database");
+            ex.printStackTrace();
+        }finally {
+            close();
+        }
     }
 
     /**
@@ -79,7 +132,19 @@ public class UserDaoJdbcImpl implements UserDao{
     @Override
     public void update(User model) {
         log.info("Update user model!");
-        //TODO Реализовать функицонал метода
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_UPDATE_USER)){
+            preparedStatement.setString(1, model.getName());
+            preparedStatement.setString(2, model.getEmail());
+            preparedStatement.setString(3, model.getPassword());
+            preparedStatement.setInt(4, model.getCity().getId());
+            preparedStatement.setInt(5, model.getId());
+            preparedStatement.executeUpdate();
+        }catch (SQLException ex){
+            log.error("Error updating user");
+            ex.printStackTrace();
+        }finally {
+            close();
+        }
     }
 
     /**
@@ -89,7 +154,15 @@ public class UserDaoJdbcImpl implements UserDao{
     @Override
     public void delete(Integer id) {
         log.info("Delete user by id!");
-        //TODO Реализовать функицонал метода
+        try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_DELETE_USER)){
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        }catch (SQLException ex){
+            log.error("Error delete user");
+            ex.printStackTrace();
+        }finally {
+            close();
+        }
     }
 
     /**
@@ -100,31 +173,60 @@ public class UserDaoJdbcImpl implements UserDao{
     public List<User> findAll() {
         log.info("Find all users!");
         List<User> users = new ArrayList<>();
-        Statement statement = null;
-        try {
-            statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(SQL_SELECT_ALL_USERS_WITH_CITY);
-            while (resultSet.next()){
-                Integer id = resultSet.getInt("id");
-                String name = resultSet.getString("name");
-                String email = resultSet.getString("email");
-                String password = resultSet.getString("password");
-                String cityName = resultSet.getString("city_name");
-                users.add(new User(id, name, email, password, cityName));
-            }
+        try(Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(SQL_SELECT_ALL_USERS_WITH_CITY)) {
+            parseResultSet(users, resultSet);
         }catch (SQLException ex){
             log.error("Error read from database");
             ex.printStackTrace();
         }finally {
-            if (statement != null){
-                try {
-                    statement.close();
-                } catch (SQLException e) {
-                    log.error("Error closed statement");
-                    e.printStackTrace();
-                }
-            }
+            close();
         }
         return users;
+    }
+
+    /**
+     * Метод закрытия соединения с базой данных
+     */
+    @Override
+    public void close() {
+        if (connection != null){
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                log.error("Error closing connection");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void closeResultSet(ResultSet resultSet){
+        if (resultSet != null){
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                log.error("Error closing result");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Метод получения результатов выполнения запроса, преобразования их в Объекты User и City
+     * и добавления в коллекцию пользователей
+     * @param users пустая коллекция пользователей
+     * @param resultSet результат запроса в бд
+     * @throws SQLException метод может генерировать исключение при работе с курсором ResultSet
+     */
+    private void parseResultSet(List<User> users, ResultSet resultSet) throws SQLException {
+        while (resultSet.next()){
+            Integer id = resultSet.getInt("id");
+            String name = resultSet.getString("name");
+            String email = resultSet.getString("email");
+            String password = resultSet.getString("password");
+            Integer cityId = resultSet.getInt("city_id");
+            String cityName = resultSet.getString("city_name");
+            users.add(new User(id, name, email, password, new City(cityId, cityName)));
+        }
     }
 }

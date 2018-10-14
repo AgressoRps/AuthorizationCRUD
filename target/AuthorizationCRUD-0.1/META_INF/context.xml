@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<Context>
+
+    <Resource name="jdbc/hibernate_test"
+        auth="Container"
+        type="javax.sql.DataSource"
+        testOnReturn="false"
+        validationQuery="SELECT 1"
+        validationInterval="30000"
+        timeBetweenEvictionRunsMillis="30000"
+        maxActive="100"
+        minIdle="10"
+        maxWait="10000"
+        initialSize="10"
+        minEvictableIdleTimeMillis="30000"
+        jmxEnabled="true"
+        username="postgres"
+        password="1182vekz73"
+        driverClassName="com.postgresql.jdbc.Driver"
+        url="jdbc:postgresql://localhost:5432/hibernate_test"
+    />
+
+</Context>
