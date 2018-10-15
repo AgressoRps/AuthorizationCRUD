@@ -2,6 +2,6 @@ package ru.starokozhev.connection;
 
 import javax.sql.DataSource;
 
-public interface IConnection {
+public interface IConnectionJdbc {
     DataSource getDataSource();
 }

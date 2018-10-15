@@ -5,7 +5,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import javax.sql.DataSource;
 import java.util.Properties;
 
-public class ConnectionJdbcImpl implements IConnection {
+public class ConnectionJdbcImpl implements IConnectionJdbc {
     private static final String PROPERTIES_NAME = "db.properties";
     private DataSource dataSource;
     private static volatile ConnectionJdbcImpl instance = null;
