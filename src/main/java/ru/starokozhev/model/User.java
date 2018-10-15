@@ -27,7 +27,6 @@ public class User {
         this.password = password;
         this.city = city;
     }
-    //public User(String name, String email, String password)
 
     public Integer getId() {
         return id;

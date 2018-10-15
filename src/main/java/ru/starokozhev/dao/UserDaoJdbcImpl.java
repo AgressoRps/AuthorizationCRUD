@@ -36,7 +36,7 @@ public class UserDaoJdbcImpl implements IUserDao {
         List<User> users = new ArrayList<>();
         ResultSet resultSet = null;
         try (PreparedStatement preparedStatement = connection.prepareStatement(SQL_SELECT_USER_BY_NAME)) {
-            preparedStatement.setString(1, nameUser + "%");
+            preparedStatement.setString(1, ((nameUser).toLowerCase() + "%"));
             resultSet = preparedStatement.executeQuery();
             parseResultSet(users, resultSet);
         }catch (SQLException ex){
