@@ -175,6 +175,10 @@ public class UserDaoJdbcImpl implements IUserDao {
         }
     }
 
+    /**
+     * Метод закрывает экземпляр класса ResultSet
+     * @param resultSet экземпляр класса, который необходимо закрытить, освободить ресурсы
+     */
     private void closeResultSet(ResultSet resultSet){
         if (resultSet != null){
             try {
